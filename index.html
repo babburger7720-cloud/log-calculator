@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>삼각함수 계산기</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #38bdf8, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle { color: #94a3b8; margin-bottom: 2rem; font-size: 0.9rem; }
+
+  .container {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .card {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #334155;
+  }
+  .card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: #93c5fd;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .input-row label { min-width: 60px; font-size: 0.9rem; color: #94a3b8; }
+  input[type="number"] {
+    flex: 1;
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    border: 1px solid #475569;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-size: 1rem;
+    outline: none;
+  }
+  input[type="number"]:focus { border-color: #60a5fa; }
+
+  .toggle {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #475569;
+  }
+  .toggle label {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    background: #0f172a;
+    transition: background 0.2s;
+  }
+  .toggle input { display: none; }
+  .toggle input:checked + span {
+    background: #3b82f6;
+    color: #fff;
+  }
+  .toggle label span {
+    display: block;
+    border-radius: 4px;
+    padding: 0.3rem;
+  }
+
+  .btn-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+  .btn-grid button {
+    padding: 0.7rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+  }
+  .btn-grid button:active { transform: scale(0.95); }
+  .btn-sin { background: #2563eb; color: #fff; }
+  .btn-cos { background: #7c3aed; color: #fff; }
+  .btn-tan { background: #0891b2; color: #fff; }
+  .btn-asin { background: #1d4ed8; color: #dbeafe; }
+  .btn-acos { background: #6d28d9; color: #ede9fe; }
+  .btn-atan { background: #0e7490; color: #cffafe; }
+
+  .result {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #0f172a;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    text-align: center;
+    min-height: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #334155;
+  }
+  .result .label { color: #64748b; font-size: 0.85rem; margin-right: 0.5rem; }
+  .result .value { color: #38bdf8; font-weight: 600; }
+
+  /* 분수 표현 */
+  .frac {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    margin: 0 0.15em;
+    font-size: 0.85em;
+  }
+  .frac .num {
+    border-bottom: 1.5px solid #38bdf8;
+    padding: 0 0.25em 0.15em;
+    line-height: 1.2;
+  }
+  .frac .den {
+    padding: 0.15em 0.25em 0;
+    line-height: 1.2;
+  }
+
+  /* 특수각 표 - 분수 */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+  th {
+    background: #334155;
+    padding: 0.6rem 0.3rem;
+    font-weight: 600;
+    color: #93c5fd;
+  }
+  td {
+    padding: 0.6rem 0.3rem;
+    border-bottom: 1px solid #1e293b;
+    color: #cbd5e1;
+  }
+  tr:hover td { background: #1e293b; }
+  td .frac { font-size: 0.9em; }
+
+  .circle-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.5rem;
+  }
+  canvas { border-radius: 8px; }
+
+  .formula {
+    font-family: 'Cambria Math', 'Times New Roman', serif;
+    color: #cbd5e1;
+    line-height: 2;
+    font-size: 0.95rem;
+  }
+  .formula div { margin-bottom: 0.3rem; }
+  .hl { color: #60a5fa; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>삼각함수 계산기</h1>
+<p class="subtitle">학생을 위한 삼각함수 도구</p>
+
+<div class="container">
+
+  <!-- 계산기 카드 -->
+  <div class="card">
+    <h2>계산기</h2>
+
+    <div class="toggle">
+      <label><input type="radio" name="unit" value="deg" checked><span>도 (Degree)</span></label>
+      <label><input type="radio" name="unit" value="rad"><span>라디안 (Radian)</span></label>
+    </div>
+
+    <div class="input-row">
+      <label>값 입력</label>
+      <input type="number" id="inputVal" placeholder="예: 30" step="any">
+    </div>
+
+    <div class="btn-grid">
+      <button class="btn-sin" onclick="calc('sin')">sin</button>
+      <button class="btn-cos" onclick="calc('cos')">cos</button>
+      <button class="btn-tan" onclick="calc('tan')">tan</button>
+      <button class="btn-asin" onclick="calc('asin')">sin⁻¹</button>
+      <button class="btn-acos" onclick="calc('acos')">cos⁻¹</button>
+      <button class="btn-atan" onclick="calc('atan')">tan⁻¹</button>
+    </div>
+
+    <div class="result" id="result">
+      <span class="label">결과가 여기에 표시됩니다</span>
+    </div>
+  </div>
+
+  <!-- 단위원 시각화 -->
+  <div class="card">
+    <h2>단위원 시각화</h2>
+    <div class="input-row">
+      <label>각도(°)</label>
+      <input type="number" id="circleAngle" placeholder="예: 45" step="any" oninput="drawCircle()">
+    </div>
+    <div class="circle-wrap">
+      <canvas id="unitCircle" width="280" height="280"></canvas>
+    </div>
+  </div>
+
+  <!-- 특수각 표 -->
+  <div class="card">
+    <h2>특수각 값 표</h2>
+    <div class="table-wrap" id="specialTable"></div>
+  </div>
+
+  <!-- 주요 공식 -->
+  <div class="card">
+    <h2>주요 공식</h2>
+    <div class="formula">
+      <div><span class="hl">sin²θ + cos²θ = 1</span></div>
+      <div><span class="hl">tan θ = sin θ / cos θ</span></div>
+      <div><span class="hl">sin(α ± β) = sinα cosβ ± cosα sinβ</span></div>
+      <div><span class="hl">cos(α ± β) = cosα cosβ ∓ sinα sinβ</span></div>
+      <div><span class="hl">sin 2θ = 2 sinθ cosθ</span></div>
+      <div><span class="hl">cos 2θ = cos²θ − sin²θ</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============ 분수 HTML 생성 ============
+function fracHTML(num, den) {
+  return '<span class="frac"><span class="num">' + num + '</span><span class="den">' + den + '</span></span>';
+}
+
+// ============ 특수각 정확한 값 테이블 ============
+// key: "fn_deg" → 정확한 HTML 표현
+const EXACT = {
+  // sin
+  sin_0: '0',
+  sin_30: fracHTML('1','2'),
+  sin_45: fracHTML('√2','2'),
+  sin_60: fracHTML('√3','2'),
+  sin_90: '1',
+  sin_120: fracHTML('√3','2'),
+  sin_135: fracHTML('√2','2'),
+  sin_150: fracHTML('1','2'),
+  sin_180: '0',
+  sin_210: '−' + fracHTML('1','2'),
+  sin_225: '−' + fracHTML('√2','2'),
+  sin_240: '−' + fracHTML('√3','2'),
+  sin_270: '−1',
+  sin_300: '−' + fracHTML('√3','2'),
+  sin_315: '−' + fracHTML('√2','2'),
+  sin_330: '−' + fracHTML('1','2'),
+  sin_360: '0',
+
+  // cos
+  cos_0: '1',
+  cos_30: fracHTML('√3','2'),
+  cos_45: fracHTML('√2','2'),
+  cos_60: fracHTML('1','2'),
+  cos_90: '0',
+  cos_120: '−' + fracHTML('1','2'),
+  cos_135: '−' + fracHTML('√2','2'),
+  cos_150: '−' + fracHTML('√3','2'),
+  cos_180: '−1',
+  cos_210: '−' + fracHTML('√3','2'),
+  cos_225: '−' + fracHTML('√2','2'),
+  cos_240: '−' + fracHTML('1','2'),
+  cos_270: '0',
+  cos_300: fracHTML('1','2'),
+  cos_315: fracHTML('√2','2'),
+  cos_330: fracHTML('√3','2'),
+  cos_360: '1',
+
+  // tan
+  tan_0: '0',
+  tan_30: fracHTML('√3','3'),
+  tan_45: '1',
+  tan_60: '√3',
+  tan_90: '정의 안됨',
+  tan_120: '−√3',
+  tan_135: '−1',
+  tan_150: '−' + fracHTML('√3','3'),
+  tan_180: '0',
+  tan_210: fracHTML('√3','3'),
+  tan_225: '1',
+  tan_240: '√3',
+  tan_270: '정의 안됨',
+  tan_300: '−√3',
+  tan_315: '−1',
+  tan_330: '−' + fracHTML('√3','3'),
+  tan_360: '0',
+};
+
+// 역함수 특수값: key = "fn_value" → 정확한 각도 표현
+const EXACT_INV = {
+  asin_0: '0°',
+  asin_1: '90°',
+  'asin_-1': '−90°',
+  'asin_0.5': '30°',
+  'asin_-0.5': '−30°',
+
+  acos_0: '90°',
+  acos_1: '0°',
+  'acos_-1': '180°',
+  'acos_0.5': '60°',
+  'acos_-0.5': '120°',
+
+  atan_0: '0°',
+  atan_1: '45°',
+  'atan_-1': '−45°',
+};
+
+// ============ 소수를 분수로 변환 ============
+function gcd(a, b) {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b) { [a, b] = [b, a % b]; }
+  return a;
+}
+
+function decToFracHTML(val) {
+  if (Math.abs(val) < 1e-12) return '0';
+  if (!isFinite(val)) return '정의되지 않음';
+
+  // 정수인 경우
+  if (Math.abs(val - Math.round(val)) < 1e-9) return Math.round(val).toString();
+
+  // √2/2, √3/2, √3/3 등 루트 포함 값 감지
+  const absVal = Math.abs(val);
+  const sign = val < 0 ? '−' : '';
+  const sqrt2 = Math.sqrt(2);
+  const sqrt3 = Math.sqrt(3);
+
+  // √2/2 ≈ 0.7071
+  if (Math.abs(absVal - sqrt2/2) < 1e-9) return sign + fracHTML('√2','2');
+  // √3/2 ≈ 0.8660
+  if (Math.abs(absVal - sqrt3/2) < 1e-9) return sign + fracHTML('√3','2');
+  // √3/3 ≈ 0.5774
+  if (Math.abs(absVal - sqrt3/3) < 1e-9) return sign + fracHTML('√3','3');
+  // √3 ≈ 1.7321
+  if (Math.abs(absVal - sqrt3) < 1e-9) return sign + '√3';
+  // √2 ≈ 1.4142
+  if (Math.abs(absVal - sqrt2) < 1e-9) return sign + '√2';
+  // 1/2
+  if (Math.abs(absVal - 0.5) < 1e-9) return sign + fracHTML('1','2');
+
+  // 일반 분수 변환 (최대 분모 10000)
+  let bestNum = 0, bestDen = 1, bestErr = Math.abs(absVal);
+  for (let den = 1; den <= 10000; den++) {
+    const num = Math.round(absVal * den);
+    const err = Math.abs(absVal - num / den);
+    if (err < bestErr) {
+      bestErr = err;
+      bestNum = num;
+      bestDen = den;
+      if (err < 1e-9) break;
+    }
+  }
+
+  if (bestErr < 1e-9 && bestDen > 1) {
+    const g = gcd(bestNum, bestDen);
+    const n = bestNum / g;
+    const d = bestDen / g;
+    if (d === 1) return sign + n.toString();
+    return sign + fracHTML(n, d);
+  }
+
+  // 분수로 표현 불가 → 소수
+  return parseFloat(val.toFixed(8)).toString();
+}
+
+// ============ 각도를 0~359로 정규화 ============
+function normDeg(d) {
+  d = d % 360;
+  if (d < 0) d += 360;
+  return Math.round(d * 1e6) / 1e6; // 부동소수 정리
+}
+
+// ============ 계산기 ============
+function getUnit() {
+  return document.querySelector('input[name="unit"]:checked').value;
+}
+function toRad(deg) { return deg * Math.PI / 180; }
+function toDeg(rad) { return rad * 180 / Math.PI; }
+
+function calc(fn) {
+  const raw = document.getElementById('inputVal').value;
+  if (raw === '') return;
+  const v = parseFloat(raw);
+  const unit = getUnit();
+  let resultHTML, label;
+
+  if (['sin','cos','tan'].includes(fn)) {
+    const deg = unit === 'deg' ? v : toDeg(v);
+    const nd = normDeg(deg);
+    const key = fn + '_' + nd;
+    const rad = toRad(deg);
+    const val = Math[fn](rad);
+
+    label = fn + '(' + raw + (unit === 'deg' ? '°' : ' rad') + ')';
+
+    // 특수각이면 정확한 값
+    if (EXACT[key] !== undefined) {
+      // 음수 각도에서 온 경우 부호 처리
+      if (deg < 0 && nd !== 0) {
+        const posKey = fn + '_' + nd;
+        resultHTML = EXACT[posKey] !== undefined ? EXACT[posKey] : decToFracHTML(val);
+        // sin(-x) = -sin(x), cos(-x) = cos(x), tan(-x) = -tan(x)
+        // 이미 normDeg로 처리했으므로 EXACT에서 직접 가져옴
+      } else {
+        resultHTML = EXACT[key];
+      }
+    } else {
+      resultHTML = decToFracHTML(val);
+    }
+  } else {
+    // 역함수
+    const val = Math[fn](v);
+    if (isNaN(val)) {
+      document.getElementById('result').innerHTML =
+        '<span class="label">오류:</span><span class="value"> 입력 범위를 확인하세요</span>';
+      return;
+    }
+    const names = { asin: 'sin⁻¹', acos: 'cos⁻¹', atan: 'tan⁻¹' };
+    label = names[fn] + '(' + raw + ')';
+
+    // 특수값 확인
+    const invKey = fn + '_' + raw;
+    if (EXACT_INV[invKey] !== undefined) {
+      if (unit === 'deg') {
+        resultHTML = EXACT_INV[invKey];
+      } else {
+        // 라디안으로 변환 표현
+        const degVal = toDeg(val);
+        resultHTML = decToFracHTML(val) + ' rad';
+      }
+    } else {
+      if (unit === 'deg') {
+        const degResult = toDeg(val);
+        resultHTML = decToFracHTML(degResult) + '°';
+      } else {
+        resultHTML = decToFracHTML(val) + ' rad';
+      }
+    }
+  }
+
+  document.getElementById('result').innerHTML =
+    '<span class="label">' + label + ' =</span> <span class="value">' + resultHTML + '</span>';
+}
+
+// ============ 특수각 표 (분수로 표시) ============
+function buildTable() {
+  const angles = [0, 30, 45, 60, 90, 120, 135, 150, 180];
+  let html = '<table><tr><th>θ</th>';
+  angles.forEach(a => html += '<th>' + a + '°</th>');
+  html += '</tr>';
+
+  ['sin','cos','tan'].forEach(fn => {
+    html += '<tr><td><b>' + fn + '</b></td>';
+    angles.forEach(a => {
+      const key = fn + '_' + a;
+      html += '<td>' + (EXACT[key] || '—') + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</table>';
+  document.getElementById('specialTable').innerHTML = html;
+}
+
+// ============ 단위원 ============
+function drawCircle() {
+  const canvas = document.getElementById('unitCircle');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const cx = w / 2, cy = h / 2, r = 110;
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, w, h);
+
+  // 축
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, cy); ctx.lineTo(w, cy);
+  ctx.moveTo(cx, 0); ctx.lineTo(cx, h);
+  ctx.stroke();
+
+  // 원
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.stroke();
+
+  const raw = document.getElementById('circleAngle').value;
+  if (raw === '') return;
+  const deg = parseFloat(raw);
+  const rad = toRad(deg);
+  const sinV = Math.sin(rad);
+  const cosV = Math.cos(rad);
+
+  const ex = cx + r * Math.cos(rad);
+  const ey = cy - r * Math.sin(rad);
+
+  // 각도 호
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 30, 0, -rad, rad > 0);
+  ctx.stroke();
+
+  // 반지름 선
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(ex, ey);
+  ctx.stroke();
+
+  // sin 선
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(ex, cy);
+  ctx.lineTo(ex, ey);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // cos 선
+  ctx.strokeStyle = '#a855f7';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(ex, cy);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 점
+  ctx.fillStyle = '#38bdf8';
+  ctx.beginPath();
+  ctx.arc(ex, ey, 5, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // 좌표 - 분수 텍스트 (canvas에는 HTML 불가, 간단히 표시)
+  const nd = normDeg(deg);
+  const sinKey = 'sin_' + nd;
+  const cosKey = 'cos_' + nd;
+  const sinText = EXACT[sinKey] ? stripHTML(EXACT[sinKey]) : sinV.toFixed(4);
+  const cosText = EXACT[cosKey] ? stripHTML(EXACT[cosKey]) : cosV.toFixed(4);
+
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '11px sans-serif';
+  ctx.fillText('(' + cosText + ', ' + sinText + ')', ex + 8, ey - 8);
+
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#fbbf24';
+  ctx.fillText('θ = ' + deg + '°', 8, h - 42);
+  ctx.fillStyle = '#ef4444';
+  ctx.fillText('sin = ' + sinText, 8, h - 28);
+  ctx.fillStyle = '#a855f7';
+  ctx.fillText('cos = ' + cosText, 8, h - 14);
+}
+
+// HTML 태그 제거 (canvas 텍스트용)
+function stripHTML(s) {
+  const div = document.createElement('div');
+  div.innerHTML = s;
+  // frac 처리: num/den 형태로
+  const fracs = div.querySelectorAll('.frac');
+  fracs.forEach(f => {
+    const num = f.querySelector('.num').textContent;
+    const den = f.querySelector('.den').textContent;
+    f.replaceWith(num + '/' + den);
+  });
+  return div.textContent;
+}
+
+// Enter 키
+document.getElementById('inputVal').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') calc('sin');
+});
+
+// 초기화
+buildTable();
+drawCircle();
+</script>
+
+</body>
+</html>
